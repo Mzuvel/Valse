@@ -3,227 +3,461 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Companion — Fixed</title>
+<title>AI Companion — Single File</title>
 <style>
-:root{--bg:#f4f6fb;--card:#fff;--muted:#64748b;--accent:#6d28d9;--accent2:#ec4899;--user:#0ea5e9}
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:#0f172a}
-.wrap{max-width:1100px;margin:18px auto;padding:12px;display:grid;grid-template-columns:280px 1fr 300px;gap:16px}
-.panel{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(10,20,40,0.06)}
-.modes,.emotions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.chip{padding:8px;border-radius:8px;border:1px solid #e6edf3;text-align:center;cursor:pointer;background:#fff}
-.chip.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
-.messages{height:58vh;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:78%;padding:10px;border-radius:10px}
-.msg.user{align-self:flex-end;background:linear-gradient(90deg,var(--user),#0369a1);color:#fff}
-.msg.ai{align-self:flex-start;background:#fff}
-.input-area{display:flex;gap:8px;margin-top:8px}
-input[type="text"]{flex:1;padding:10px;border-radius:8px;border:1px solid #e6edf3}
-button{padding:8px 10px;border-radius:8px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;cursor:pointer}
-.small{padding:6px 8px;background:#fff;border:1px solid #e6edf3;color:#111}
-.tiny{font-size:0.8rem;color:var(--muted)}
+:root{
+--bg:#f6f7fb; --card:#ffffff; --muted:#6b7280; --accent:#4f46e5;
+--user:#0ea5a4; --ai:#2563eb; --danger:#ef4444;
+}
+[data-theme="dark"]{
+--bg:#0b1020; --card:#0f1724; --muted:#94a3b8; --accent:#8b5cf6;
+--user:#06b6d4; --ai:#60a5fa; --danger:#fb7185;
+}
+body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg),#e9eefb);min-height:100vh;color:#0f1724}
+.app{max-width:960px;margin:28px auto;padding:18px;display:grid;grid-template-columns:1fr 320px;gap:18px}
+.card{background:var(--card);border-radius:12px;box-shadow:0 6px 18px rgba(12,15,30,.06);padding:14px}
+header{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+h1{margin:0;font-size:18px}
+.chat{height:66vh;overflow:auto;padding:12px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0.02),transparent)}
+.msg{display:flex;gap:10px;margin-bottom:10px;align-items:flex-end}
+.msg.ai{flex-direction:row}
+.bubble{max-width:78%;padding:10px 12px;border-radius:12px;line-height:1.35}
+.bubble.ai{background:linear-gradient(90deg,var(--ai),#3b82f6);color:white;border-bottom-left-radius:4px}
+.bubble.user{background:linear-gradient(90deg,var(--user),#06b6d4);color:white;margin-left:auto;border-bottom-right-radius:4px}
+.controls{display:flex;gap:8px;align-items:center;margin-top:10px}
+textarea{width:100%;min-height:54px;resize:vertical;padding:10px;border-radius:8px;border:1px solid #e6e9f0;font-size:14px}
+select,input[type="checkbox"]{padding:6px;border-radius:6px;border:1px solid #e6e9f0}
+.side{display:flex;flex-direction:column;gap:10px}
+.small{font-size:13px;color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center}
+.btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid rgba(79,70,229,.12)}
+.btn.warn{background:var(--danger)}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+.tiny{font-size:12px;color:var(--muted)}
+.footer{grid-column:1 / -1;margin-top:10px;display:flex;justify-content:space-between;gap:8px}
+.toggle{display:inline-flex;align-items:center;gap:6px}
+.status{font-size:13px;color:var(--muted)}
+.controls .left{flex:1;display:flex;gap:8px}
+.search{padding:8px;border-radius:8px;border:1px solid #e6e9f0}
+.msg-meta{font-size:11px;color:rgba(255,255,255,.85);margin-top:6px;opacity:.9}
+.typing{font-style:italic;color:var(--muted);padding:6px 10px;border-radius:8px}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.small-muted{font-size:12px;color:var(--muted)}
+.file-row{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:6px 8px;border-radius:999px;background:rgba(0,0,0,0.04);font-size:12px}
+/* responsive */
+@media (max-width:900px){.app{grid-template-columns:1fr;padding:12px}.side{order:2}.card{padding:10px}.chat{height:52vh}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<aside class="panel">
-<h3>Pengaturan</h3>
-<label class="tiny">Nama AI</label>
-<input id="aiName" type="text" value="Luna" />
-<label class="tiny" style="margin-top:8px">Nickname Anda</label>
-<input id="userNickname" type="text" value="Sayang" />
-<label class="tiny" style="margin-top:8px">Mode</label>
-<div id="modes" class="modes">
-<div class="chip active" data-mode="casual">Casual</div>
-<div class="chip" data-mode="friend">Friend</div>
-<div class="chip" data-mode="therapist">Therapist</div>
-<div class="chip" data-mode="romantic">Romantic</div>
-</div>
-<div style="margin-top:10px">
-<label class="tiny">Adult (non-eksplisit)</label>
-<div style="display:flex;gap:8px;margin-top:6px">
-<div id="adultSwitch" class="small">Toggle</div>
-<div id="adultConfirm" class="small">Konfirmasi</div>
-</div>
-<div class="tiny" style="margin-top:6px">Hanya diskusi non-eksplisit. Kata eksplisit diblokir.</div>
-</div>
-</aside>
-
-<main class="panel">
-<div style="display:flex;justify-content:space-between;align-items:center">
+<div class="app" id="app">
+<div class="card" id="mainCard">
+<header>
 <div>
-<div id="hdrName" style="font-weight:700">Luna</div>
-<div id="hdrStatus" class="tiny">Siap • Mode: Casual</div>
+<h1>AI Companion (local)</h1>
+<div class="tiny">Rule-based companion — runs fully in your browser. No API keys.</div>
 </div>
-<div class="tiny" id="timeGreet"></div>
+<div style="margin-left:auto" class="tiny">
+<span id="memoryCount">Memory: 0</span>
+</div>
+</header>
+
+<div class="topline">
+<div class="row small-muted">
+<label class="toggle"><input id="adultToggle" type="checkbox"> <span>Adult (non-explicit)</span></label>
+<span class="pill" id="personaPill">Persona: Neutral</span>
+</div>
+<div class="row">
+<button class="btn ghost" id="clearBtn">Clear</button>
+<button class="btn" id="exportBtn">Export</button>
+</div>
 </div>
 
-<div id="messages" class="messages" aria-live="polite"></div>
+<div class="chat" id="chat"></div>
 
-<div id="typing" class="tiny" style="display:none">AI sedang mengetik...</div>
-
-<div class="input-area">
-<input id="uinput" type="text" placeholder="Ketik pesan... (Enter untuk kirim)" />
-<button id="sendBtn">Kirim</button>
-<button id="exportChat" class="small">Export</button>
+<div class="controls">
+<div class="left">
+<textarea id="input" placeholder="Tulis pesan... (Tekan Enter untuk kirim, Shift+Enter untuk baris baru)"></textarea>
 </div>
-</main>
+<div style="width:120px;display:flex;flex-direction:column">
+<select id="persona" title="Pilih persona">
+<option value="neutral">Neutral</option>
+<option value="friend">Friendly</option>
+<option value="therapist">Supportive</option>
+<option value="playful">Playful</option>
+</select>
+<button class="btn" id="sendBtn" style="margin-top:8px">Kirim</button>
+</div>
+</div>
 
-<aside class="panel">
-<h3>Tools</h3>
-<div style="margin-bottom:8px"><button id="clearChat" class="small">Clear Chat</button></div>
-<div><label class="tiny">Import .json</label><input id="fileInput" type="file" accept=".json" /></div>
-</aside>
+<div class="tiny" style="margin-top:8px">Tip: gunakan tombol Export untuk simpan percakapan, atau klik pesan untuk Edit/Hapus.</div>
+</div>
+
+<div class="side">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+<div class="small-muted">Settings</div>
+<div class="small-muted">Theme:
+<select id="themeSelect">
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</div>
+</div>
+
+<div class="small-muted" style="margin-bottom:6px">Quick replies</div>
+<div class="file-row" id="quickRow">
+<button class="pill" data-q="Hai, apa kabar?">Hai</button>
+<button class="pill" data-q="Saya butuh saran tentang hubungan">Saran</button>
+<button class="pill" data-q="Bicarakan perasaan saya">Perasaan</button>
+</div>
+
+<hr style="margin:10px 0;border:none;border-top:1px solid #eef2ff" />
+
+<div class="small-muted">Memory (topic snippets)</div>
+<div id="memoryList" style="min-height:60px;padding-top:8px"></div>
+
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="btn ghost" id="importBtn">Import</button>
+<button class="btn warn" id="resetBtn">Reset All</button>
+</div>
+</div>
+
+<div class="card tiny" style="text-align:center">
+<div style="font-weight:600">Status</div>
+<div id="statusArea" class="status" style="margin-top:8px">Idle</div>
+<div class="small-muted" style="margin-top:8px">Local-only. Tidak mengirim data ke server.</div>
+</div>
+</div>
+
 </div>
 
 <script>
-/* Minimal working safe companion (client-side only) */
-const state = {
-aiName: localStorage.getItem('aiName') || 'Luna',
-userNickname: localStorage.getItem('userNickname') || 'Sayang',
-mode: localStorage.getItem('mode') || 'casual',
-adultEnabled: localStorage.getItem('adultEnabled') === 'true',
-messages: JSON.parse(localStorage.getItem('messages') || '[]')
+// Basic app state
+const chatEl = document.getElementById('chat');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const personaSelect = document.getElementById('persona');
+const adultToggle = document.getElementById('adultToggle');
+const personaPill = document.getElementById('personaPill');
+const memoryList = document.getElementById('memoryList');
+const memoryCount = document.getElementById('memoryCount');
+const themeSelect = document.getElementById('themeSelect');
+const statusArea = document.getElementById('statusArea');
+const quickRow = document.getElementById('quickRow');
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const clearBtn = document.getElementById('clearBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+// Storage keys
+const STORAGE_KEY = 'ai_companion_v1';
+const MEM_KEY = 'ai_companion_mem_v1';
+
+// Minimal explicit word filter (expand as needed)
+const EXPLICIT_WORDS = ["fuck","f**k","motherfucker","cocksucker","pussy","dick","cock","asshole","bastard","xxx","porn","pornography","penetration"];
+function containsExplicit(text){
+const t = text.toLowerCase();
+return EXPLICIT_WORDS.some(w => t.includes(w));
+}
+
+// Load state
+let state = {
+convo: [], // {role:'user'|'ai',text,ts}
+memory: [], // short notes
+persona: 'neutral',
+adultAllowed: false,
+theme: 'light'
 };
 
-const els = {
-aiName: document.getElementById('aiName'),
-userNickname: document.getElementById('userNickname'),
-modes: document.getElementById('modes'),
-adultSwitch: document.getElementById('adultSwitch'),
-adultConfirm: document.getElementById('adultConfirm'),
-hdrName: document.getElementById('hdrName'),
-hdrStatus: document.getElementById('hdrStatus'),
-timeGreet: document.getElementById('timeGreet'),
-messages: document.getElementById('messages'),
-typing: document.getElementById('typing'),
-uinput: document.getElementById('uinput'),
-sendBtn: document.getElementById('sendBtn'),
-exportChat: document.getElementById('exportChat'),
-clearChat: document.getElementById('clearChat'),
-fileInput: document.getElementById('fileInput')
-};
-
-function saveState(){ localStorage.setItem('aiName', state.aiName); localStorage.setItem('userNickname', state.userNickname); localStorage.setItem('mode', state.mode); localStorage.setItem('adultEnabled', state.adultEnabled); localStorage.setItem('messages', JSON.stringify(state.messages)); }
-
-function init(){
-els.aiName.value = state.aiName;
-els.userNickname.value = state.userNickname;
-els.hdrName.textContent = state.aiName;
-renderModes();
-renderMessages();
-updateTimeGreet();
-}
-function renderModes(){
-[...els.modes.querySelectorAll('.chip')].forEach(c=>{
-c.classList.toggle('active', c.dataset.mode === state.mode);
-});
-}
-els.modes.addEventListener('click', e=>{
-const chip = e.target.closest('.chip');
-if(!chip) return;
-state.mode = chip.dataset.mode;
-renderModes();
-saveState();
-els.hdrStatus.textContent = Siap • Mode: ${state.mode};
-});
-
-els.aiName.addEventListener('input', e=>{ state.aiName = e.target.value || 'Luna'; els.hdrName.textContent = state.aiName; saveState(); });
-els.userNickname.addEventListener('input', e=>{ state.userNickname = e.target.value || 'Sayang'; saveState(); });
-
-els.adultSwitch.addEventListener('click', ()=>{ state.adultEnabled = !state.adultEnabled; els.adultSwitch.textContent = state.adultEnabled ? 'On' : 'Off'; saveState(); });
-els.adultConfirm.addEventListener('click', ()=>{ const ok = confirm('Konfirmasi: saya berusia 18+ dan setuju diskusi non-eksplisit.'); if(ok){ state.adultEnabled = true; els.adultSwitch.textContent = 'On'; saveState(); alert('Adult mode aktif (non-eksplisit).'); } });
-
-const explicit = ['ngentot','porn','fuck','sex','pornografi','masturb','anal','oral'];
-function containsExplicit(text){ const t = text.toLowerCase(); return explicit.some(w=>t.includes(w)); }
-
-function detectTopic(t){
-const s = t.toLowerCase();
-if(/(cinta|pacar|hubungan)/.test(s)) return 'romance';
-if(/(saran|masalah|nasihat)/.test(s)) return 'advice';
-return 'general';
-}
-
-function generateResponse(userText){
-if(containsExplicit(userText)){
-return "Maaf, saya tidak dapat membahas konten seksual eksplisit. Kita bisa membahas hubungan, emosi, atau saran tanpa detail seksual.";
-}
-const topic = detectTopic(userText);
-const templates = {
-casual: ["Oh ya? Ceritakan lebih lanjut tentang %s.","Menarik. Mengapa kamu merasa begitu soal %s?"],
-friend: ["Sebagai teman, aku mendengarkan. Apa yang terjadi terkait %s?"],
-therapist: ["Mari kita lihat: ketika menyebut %s, apa yang kamu rasakan?"],
-romantic: ["Itu terdengar hangat. Bagaimana momen %s membuatmu merasa?"]
-};
-const base = templates[state.mode] || templates['casual'];
-let tmpl = base[Math.floor(Math.random()*base.length)];
-const sub = (topic === 'general') ? userText.split(' ').slice(0,6).join(' ') : topic;
-return tmpl.replace('%s', sub);
-}
-
-function renderMessages(){
-els.messages.innerHTML = '';
-state.messages.forEach(m=>{
-const d = document.createElement('div');
-d.className = 'msg ' + (m.role === 'user' ? 'user':'ai');
-d.innerHTML = <div>${escapeHtml(m.text)}</div><div class="tiny" style="margin-top:6px">${new Date(m.ts).toLocaleString()}</div>;
-els.messages.appendChild(d);
-});
-els.messages.scrollTop = els.messages.scrollHeight;
-}
-
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-els.sendBtn.addEventListener('click', ()=> send());
-els.uinput.addEventListener('keydown', e=>{ if(e.key === 'Enter') send(); });
-
-function send(){
-const text = els.uinput.value.trim();
-if(!text) return;
-state.messages.push({role:'user', text, ts: Date.now()});
-els.uinput.value = '';
-renderMessages();
-saveState();
-
-// Simulate typing
-els.typing.style.display = 'block';
-setTimeout(()=>{
-els.typing.style.display = 'none';
-const resp = generateResponse(text);
-state.messages.push({role:'ai', text: resp, ts: Date.now()});
-renderMessages();
-saveState();
-}, 600 + Math.floor(Math.random()*600));
-}
-
-els.exportChat.addEventListener('click', ()=>{
-const blob = new Blob([JSON.stringify({messages:state.messages},null,2)],{type:'application/json'});
-const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'chat.json'; a.click();
-});
-
-els.clearChat.addEventListener('click', ()=>{ if(confirm('Hapus semua chat?')){ state.messages = []; saveState(); renderMessages(); } });
-
-els.fileInput.addEventListener('change', e=>{
-const f = e.target.files0; if(!f) return;
-const r = new FileReader(); r.onload = ()=> {
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateUI(); }
+function loadState(){
 try{
-const j = JSON.parse(r.result);
-if(Array.isArray(j.messages)){ state.messages = j.messages; saveState(); renderMessages(); alert('Import berhasil'); }
-else alert('Format file tidak dikenali');
-}catch(err){ alert('Gagal membaca file'); }
-};
-r.readAsText(f);
+const raw = localStorage.getItem(STORAGE_KEY);
+if(raw) state = JSON.parse(raw);
+}catch(e){}
+}
+
+// UI helpers
+function el(tag, cls){ const d = document.createElement(tag); if(cls) d.className = cls; return d; }
+function formatTime(ts){ const d=new Date(ts); return d.toLocaleTimeString(); }
+
+// Render chat
+function renderChat(){
+chatEl.innerHTML = '';
+state.convo.forEach((m, idx) => {
+const row = el('div','msg ' + (m.role==='ai' ? 'ai' : 'user'));
+const bubble = el('div','bubble ' + (m.role==='ai' ? 'ai' : 'user'));
+bubble.textContent = m.text;
+// message meta actions
+const meta = el('div','msg-meta');
+meta.textContent = m.role === 'ai' ? AI • ${formatTime(m.ts)} : You • ${formatTime(m.ts)};
+bubble.appendChild(meta);
+
+// click to edit/delete
+bubble.addEventListener('click', (ev) => {
+ev.stopPropagation();
+if(m.role === 'user'){
+const newText = prompt('Edit pesan Anda:', m.text);
+if(newText === null) return;
+if(newText.trim()===''){ if(confirm('Hapus pesan ini?')) { state.convo.splice(idx,1); saveState(); } return; }
+state.convo[idx].text = newText.trim();
+saveState();
+} else {
+if(confirm('Hapus pesan AI ini?')){ state.convo.splice(idx,1); saveState(); }
+}
 });
 
-function updateTimeGreet(){
-const h = new Date().getHours(); let g = 'Halo';
-if(h<12) g='Selamat pagi'; else if(h<18) g='Selamat siang'; else g='Selamat sore';
-els.timeGreet.textContent = g;
+row.appendChild(bubble);
+chatEl.appendChild(row);
+});
+chatEl.scrollTop = chatEl.scrollHeight;
 }
-setInterval(updateTimeGreet,60000);
 
+// Update memory UI
+function renderMemory(){
+memoryList.innerHTML = '';
+state.memory.forEach((m,i) => {
+const r = el('div','row');
+const p = el('div'); p.textContent = m.text; p.className='small-muted';
+const del = el('button','pill'); del.textContent='x'; del.style.marginLeft='auto';
+del.addEventListener('click',()=>{ state.memory.splice(i,1); saveState(); });
+r.appendChild(p); r.appendChild(del);
+memoryList.appendChild(r);
+});
+memoryCount.textContent = Memory: ${state.memory.length};
+}
+
+function updateUI(){
+personaPill.textContent = Persona: ${capitalize(state.persona)};
+document.documentElement.setAttribute('data-theme', state.theme === 'dark' ? 'dark' : 'light');
+themeSelect.value = state.theme;
+personaSelect.value = state.persona;
+adultToggle.checked = state.adultAllowed;
+renderChat();
+renderMemory();
+}
+
+// Basic rule-based response generator
+function generateResponse(userText){
+const txt = userText.trim();
+// Safety filter
+if(containsExplicit(txt) && !state.adultAllowed){
+return { text: "Maaf, saya tidak bisa membahas konten eksplisit. Kita bisa fokus pada hubungan, perasaan, atau saran.", meta: 'filter' };
+}
+// Adult confirmation/limit
+if(containsExplicit(txt) && state.adultAllowed){
+return { text: "Saya akan menjaga percakapan tetap non-eksplisit meski topiknya dewasa. Bagaimana perasaan Anda terkait itu?", meta: 'adult' };
+}
+
+// Simple intent matching
+const t = txt.toLowerCase();
+if(t.includes('saran') || t.includes('advice') || t.includes('butuh saran')){
+return personaReply(Tentu — saya akan coba bantu dengan saran praktis. Bisa ceritakan detailnya?);
+}
+if(t.includes('hai') || t.includes('halo') || t.includes('hello')){
+return personaReply(Hai! Senang bertemu. Mau bicara tentang apa hari ini?);
+}
+if(t.includes('sedih') || t.includes('nangis') || t.includes('depressed') || t.includes('down')){
+// add memory note
+addMemory(User merasa sedih pada ${new Date().toLocaleString()});
+return personaReply(Maaf Anda merasa sedih. Mau ceritakan apa yang membuatnya berat? Saya mendengarkan.);
+}
+if(t.includes('terima kasih') || t.includes('thanks')){
+return personaReply(Sama-sama — senang bisa membantu.);
+}
+if(t.startsWith('ingatkan') || t.startsWith('ingatkan saya') || t.includes('ingat')){
+return personaReply(Saya menyimpan ingatan singkat untuk topik ini: "${txt}") ;
+}
+
+// If question-like
+if(t.endsWith('?') || t.startsWith('apa') || t.startsWith('kenapa') || t.startsWith('bagaimana')){
+return personaReply(Itu pertanyaan bagus. Saya berpikir... ${shortElaborate(txt)});
+}
+
+// fallback
+return personaReply(Menarik. Ceritakan lebih lanjut atau tanyakan hal spesifik — saya akan mencoba membantu.);
+}
+
+function personaReply(core){
+switch(state.persona){
+case 'friend': return { text: Teman: ${core} };
+case 'therapist': return { text: Support: ${core} };
+case 'playful': return { text: Hehe! ${core} };
+default: return { text: core };
+}
+}
+
+function shortElaborate(q){
+return Coba jelaskan sedikit lebih rinci sehingga saya bisa memberi saran yang berguna. Jika mau, sebutkan perasaan Anda dan apa yang sudah dicoba.;
+}
+
+function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+// Simulated typing + add AI message
+function respondTo(userText){
+// show typing indicator
+const typing = el('div','msg ai');
+const bubble = el('div','bubble ai');
+bubble.textContent = 'Mengetik...';
+typing.appendChild(bubble);
+chatEl.appendChild(typing);
+chatEl.scrollTop = chatEl.scrollHeight;
+statusArea.textContent = 'Mengetik...';
+
+setTimeout(()=>{
+// remove last typing
+if(chatEl.lastChild === typing) chatEl.removeChild(typing);
+// generate
+const resp = generateResponse(userText);
+// if filter triggered (explicit)
+if(resp.meta === 'filter'){
+addMessage('ai', resp.text);
+statusArea.textContent = 'Keamanan: filter aktif';
+saveState();
+return;
+}
+// normal
+addMessage('ai', resp.text);
+statusArea.textContent = 'Idle';
+saveState();
+}, 500 + Math.min(1200, userText.length * 20)); // short delay
+}
+
+// Message + memory helpers
+function addMessage(role, text){
+state.convo.push({ role, text, ts: Date.now() });
+// auto-memory rule: if user mentions "ingat" or "saya suka" capture
+if(role === 'user' && /ingat|suka|preferensi|prefer/i.test(text)){
+addMemory(text);
+}
+renderChat();
+}
+
+function addMemory(text){
+state.memory.unshift({ text, ts: Date.now() });
+if(state.memory.length > 12) state.memory.pop();
+}
+
+// Event handlers
+sendBtn.addEventListener('click', onSend);
+inputEl.addEventListener('keydown', (e)=>{
+if(e.key === 'Enter' && !e.shiftKey){
+e.preventDefault();
+onSend();
+}
+});
+
+function onSend(){
+const txt = inputEl.value.trim();
+if(!txt) return;
+if(containsExplicit(txt) && !state.adultAllowed){
+if(!confirm('Pesan ini terlihat mengandung konten dewasa/eksplisit. Konfirmasi untuk mengaktifkan mode Adult?')) return;
+// if confirmed, enable adult toggle
+state.adultAllowed = true;
+}
+addMessage('user', txt);
+inputEl.value = '';
+renderChat();
+respondTo(txt);
+saveState();
+}
+
+personaSelect.addEventListener('change', ()=>{
+state.persona = personaSelect.value;
+saveState();
+});
+
+adultToggle.addEventListener('change', ()=>{
+if(adultToggle.checked){
+const ok = confirm('Anda mengaktifkan mode dewasa (non-eksplisit). Konfirmasi berusia 18+?');
+if(!ok){ adultToggle.checked = false; return; }
+state.adultAllowed = true;
+} else {
+state.adultAllowed = false;
+}
+saveState();
+});
+
+themeSelect.addEventListener('change', ()=>{
+state.theme = themeSelect.value;
+saveState();
+});
+
+quickRow.addEventListener('click',(e)=> {
+const q = e.target?.dataset?.q;
+if(q){ inputEl.value = q; inputEl.focus(); }
+});
+
+exportBtn.addEventListener('click', ()=> {
+const data = { state, exportedAt: new Date().toISOString() };
+const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url; a.download = 'ai_companion_export.json'; a.click();
+URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener('click', ()=> {
+const file = document.createElement('input');
+file.type = 'file';
+file.accept = 'application/json';
+file.onchange = e => {
+const f = e.target.files0;
+if(!f) return;
+const reader = new FileReader();
+reader.onload = ev => {
+try{
+const data = JSON.parse(ev.target.result);
+if(data.state){
+state = data.state;
+saveState();
+alert('Import sukses.');
+} else alert('Format tidak dikenali.');
+}catch(err){ alert('Gagal membaca file. Pastikan format JSON yang benar.'); }
+};
+reader.readAsText(f);
+};
+file.click();
+});
+
+clearBtn.addEventListener('click', ()=>{
+if(confirm('Bersihkan percakapan saat ini?')){ state.convo = []; saveState(); }
+});
+
+resetBtn.addEventListener('click', ()=>{
+if(confirm('Reset semua data (percakapan + memory + settings)?')){ state = { convo:[], memory:[], persona:'neutral', adultAllowed:false, theme:'light' }; saveState(); }
+});
+
+// init
+function init(){
+loadState();
+// ensure fields present
+if(!Array.isArray(state.convo)) state.convo = [];
+if(!Array.isArray(state.memory)) state.memory = [];
+if(!state.persona) state.persona = 'neutral';
+if(!state.theme) state.theme = 'light';
+// set UI
+updateUI();
+// attach click to messages for edit/delete - already in render
+statusArea.textContent = 'Ready';
+}
 init();
 
+// Additional small utility: click outside to unfocus, double-click to copy message
+chatEl.addEventListener('dblclick',(e)=>{
+const tgt = e.target;
+if(tgt && tgt.classList && tgt.classList.contains('bubble')){
+navigator.clipboard?.writeText(tgt.textContent.trim()).then(()=> {
+statusArea.textContent = 'Tersalin ke clipboard';
+setTimeout(()=> statusArea.textContent = 'Ready',1200);
+}).catch(()=>{});
+}
+});
+
+// Accessibility: focus input on load
+window.addEventListener('load', ()=> inputEl.focus());
 </script>
 </body>
-</html>
+  </html>
