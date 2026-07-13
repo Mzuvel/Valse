@@ -3,476 +3,227 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI Companion — Single File (Safe Adult Mode)</title>
+<title>AI Companion — Fixed</title>
 <style>
-:root{--bg:#f4f6fb;--card:#fff;--muted:#64748b;--accent:#6d28d9;--accent2:#ec4899;--user:#0ea5e9;--ai:#f97316;--success:#10b981}
-*{box-sizing:border-box} html,body{height:100%;margin:0;font-family:Inter,system-ui,Roboto,Arial;background:var(--bg);color:#0f172a}
-.wrap{max-width:1200px;margin:18px auto;padding:12px;display:grid;grid-template-columns:300px 1fr 300px;gap:16px;min-height:84vh}
-@media(max-width:1000px){.wrap{grid-template-columns:1fr}.right,.left{order:99}}
-.panel{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(10,20,40,0.06);overflow:auto}
-h3{margin:0 0 10px 0;font-size:1.05rem} input,textarea,select,button{font:inherit}
-label{display:block;margin-bottom:6px;font-size:0.85rem;color:var(--muted)} input[type="text"],textarea,select{width:100%;padding:8px;border:1px solid #e6edf3;border-radius:8px;background:#fbfdff}
-textarea{resize:vertical} .modes,.emotions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+:root{--bg:#f4f6fb;--card:#fff;--muted:#64748b;--accent:#6d28d9;--accent2:#ec4899;--user:#0ea5e9}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:#0f172a}
+.wrap{max-width:1100px;margin:18px auto;padding:12px;display:grid;grid-template-columns:280px 1fr 300px;gap:16px}
+.panel{background:var(--card);padding:12px;border-radius:10px;box-shadow:0 6px 18px rgba(10,20,40,0.06)}
+.modes,.emotions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .chip{padding:8px;border-radius:8px;border:1px solid #e6edf3;text-align:center;cursor:pointer;background:#fff}
-.chip.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(109,40,217,0.14)}
-.toggle{display:inline-flex;align-items:center;gap:10px} .tswitch{width:46px;height:26px;border-radius:30px;background:#cbd5e1;padding:3px;position:relative;cursor:pointer}
-.tslider{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;left:3px;top:3px;transition:all .18s}
-.tswitch.on{background:var(--accent)} .tswitch.on .tslider{left:23px}
-.center-col{display:flex;flex-direction:column;height:80vh}
-.chat-header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:8px;margin-bottom:8px;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
-.messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(255,255,255,0.0),rgba(255,255,255,0.02))}
-.msg{max-width:78%;padding:10px;border-radius:12px;line-height:1.45;box-shadow:0 2px 6px rgba(12,18,30,0.04)}
-.msg.user{align-self:flex-end;background:linear-gradient(90deg,var(--user),#0369a1);color:#fff;border-bottom-right-radius:4px}
-.msg.ai{align-self:flex-start;background:#fff;color:#0f172a;border-bottom-left-radius:4px}
-.meta{font-size:0.78rem;color:var(--muted);margin-top:6px} .input-area{display:flex;gap:8px;padding:10px;border-radius:10px;background:var(--card);align-items:center}
-#uinput{flex:1;padding:10px;border-radius:10px;border:1px solid #e6edf3} .btn{padding:10px 12px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;cursor:pointer}
-.small{font-size:0.85rem;padding:6px 8px;border-radius:8px} .tiny{font-size:0.75rem;color:var(--muted)}
-.typing{display:flex;gap:6px;align-items:center;padding:8px 12px;border-radius:12px;background:#fff}
-.dot{width:8px;height:8px;background:var(--accent2);border-radius:50%;animation:pop 1.2s infinite}
-.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s} @keyframes pop{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
-.pill{display:inline-block;padding:6px 8px;border-radius:999px;background:#111827;color:#fff;font-size:0.75rem} .danger{background:#ef4444} .success{background:var(--success)}
+.chip.active{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+.messages{height:58vh;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:78%;padding:10px;border-radius:10px}
+.msg.user{align-self:flex-end;background:linear-gradient(90deg,var(--user),#0369a1);color:#fff}
+.msg.ai{align-self:flex-start;background:#fff}
+.input-area{display:flex;gap:8px;margin-top:8px}
+input[type="text"]{flex:1;padding:10px;border-radius:8px;border:1px solid #e6edf3}
+button{padding:8px 10px;border-radius:8px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;cursor:pointer}
+.small{padding:6px 8px;background:#fff;border:1px solid #e6edf3;color:#111}
+.tiny{font-size:0.8rem;color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="wrap">
-<aside class="left panel">
-<h3>Pengaturan & Personality</h3>
-<div class="group">
-<label>Nama AI</label><input id="aiName" type="text" value="Luna" />
-</div>
-<div class="group">
-<label>Panggilan untuk Anda (nickname)</label><input id="userNickname" type="text" value="Sayang" />
-</div>
-<div class="group">
-<label>Personality Trait (editable)</label>
-<textarea id="aiTrait" rows="4">Saya adalah AI companion: perhatian, empatik, dan menghormati batas.</textarea>
-</div>
-<div class="group">
-<label>Conversation Mode</label>
-<div class="modes" id="modes">
+<aside class="panel">
+<h3>Pengaturan</h3>
+<label class="tiny">Nama AI</label>
+<input id="aiName" type="text" value="Luna" />
+<label class="tiny" style="margin-top:8px">Nickname Anda</label>
+<input id="userNickname" type="text" value="Sayang" />
+<label class="tiny" style="margin-top:8px">Mode</label>
+<div id="modes" class="modes">
 <div class="chip active" data-mode="casual">Casual</div>
-<div class="chip" data-mode="flirty">Flirty</div>
-<div class="chip" data-mode="romantic">Romantic</div>
 <div class="chip" data-mode="friend">Friend</div>
 <div class="chip" data-mode="therapist">Therapist</div>
-<div class="chip" data-mode="roleplay">Roleplay</div>
+<div class="chip" data-mode="romantic">Romantic</div>
 </div>
+<div style="margin-top:10px">
+<label class="tiny">Adult (non-eksplisit)</label>
+<div style="display:flex;gap:8px;margin-top:6px">
+<div id="adultSwitch" class="small">Toggle</div>
+<div id="adultConfirm" class="small">Konfirmasi</div>
 </div>
-<div class="group">
-<label>Emotional State</label>
-<div class="emotions" id="emotions">
-<div class="chip" data-em="happy">😊 Happy</div>
-<div class="chip" data-em="sad">😔 Sad</div>
-<div class="chip active" data-em="calm">😌 Calm</div>
-<div class="chip" data-em="playful">😏 Playful</div>
-<div class="chip" data-em="excited">🤩 Excited</div>
-<div class="chip" data-em="serious">😐 Serious</div>
+<div class="tiny" style="margin-top:6px">Hanya diskusi non-eksplisit. Kata eksplisit diblokir.</div>
 </div>
-</div>
-<div class="group">
-<label>Response Length</label>
-<select id="respLen"><option value="short">Short</option><option value="medium" selected>Medium</option><option value="long">Long</option></select>
-</div>
-<div class="group">
-<label>Formality</label>
-<select id="formality"><option value="casual">Casual</option><option value="normal" selected>Normal</option><option value="formal">Formal</option></select>
-</div>
-<div class="group">
-<label>Adult Content (diskusi dewasa non-eksplisit)</label>
-<div style="display:flex;align-items:center;justify-content:space-between">
-<div class="toggle">
-<div id="adultSwitch" class="tswitch" title="Toggle adult content"><div class="tslider"></div></div>
-<div class="tiny" style="margin-left:8px" id="adultLabel">Off</div>
-</div>
-<button id="adultConfirm" class="small">Konfirmasi</button>
-</div>
-<div class="tiny" style="margin-top:6px">Hanya untuk diskusi dewasa non-eksplisit: hubungan, emosi, dan saran. Konten eksplisit tetap ditolak.</div>
-</div>
-<div class="group">
-<label>Typing speed (ms)</label><input id="typeSpeed" type="text" value="800" />
-<div class="tiny">Waktu "sedang mengetik" sebelum AI menjawab.</div>
-</div>
-<div class="group">
-<label>Quick Replies</label>
-<div class="toolbar">
-<button class="small" data-qr="Hai, apa kabar?">Hai</button>
-<button class="small" data-qr="Katakan sesuatu yang menenangkan">Tenang</button>
-<button class="small" data-qr="Berikan saran hubungan">Saran</button>
-<button class="small" data-qr="Ceritakan sesuatu yang manis">Manis</button>
-</div>
-</div>
-<div class="group">
-<label>Memory (local)</label>
-<div style="display:flex;gap:8px"><button id="clearMem" class="small">Clear Memory</button><button id="exportMem" class="small">Export</button></div>
-<div class="tiny" style="margin-top:6px">Sistem mengingat hal penting untuk konteks.</div>
-</div>
-<div class="group">
-<label>Theme</label><div style="display:flex;gap:8px"><button id="themeToggle" class="small">Toggle Dark</button><button id="resetAll" class="small danger">Reset All</button></div>
-</div>
-<div class="footer-note tiny">Fitur: editable personality, mode, mood, memory, export/import. Semua data lokal.</div>
 </aside>
 
-<main class="center-col panel">
-<div class="chat-header">
-<div style="display:flex;gap:12px;align-items:center">
-<div style="width:48px;height:48px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent)">AI</div>
-<div><div id="hdrName" style="font-weight:700">Luna</div><div id="hdrStatus" class="tiny">Siap mengobrol • Mode: Casual • Mood: Calm</div></div>
+<main class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div>
+<div id="hdrName" style="font-weight:700">Luna</div>
+<div id="hdrStatus" class="tiny">Siap • Mode: Casual</div>
 </div>
-<div style="display:flex;gap:8px;align-items:center"><div class="pill" id="adultPill" style="display:none">Adult ON</div><div class="tiny" id="timeGreet"></div></div>
-</div>
-
-<div class="messages" id="messages" aria-live="polite"></div>
-
-<div id="typingIndicator" class="typing" style="display:none"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="tiny" style="margin-left:8px">AI sedang mengetik...</div></div>
-
-<div class="input-area" style="margin-top:8px">
-<input id="uinput" placeholder="Ketik pesan... (Enter untuk kirim)" autocomplete="off" />
-<button id="sendBtn" class="btn">Kirim</button>
-<button id="attachBtn" class="small" title="Export/Import">⋯</button>
+<div class="tiny" id="timeGreet"></div>
 </div>
 
-<div style="display:flex;justify-content:space-between;margin-top:8px;gap:8px">
-<div class="tiny">Pesan: <span id="msgCount">0</span></div>
-<div class="tiny">Topik saran: <span id="topicSug">—</span></div>
+<div id="messages" class="messages" aria-live="polite"></div>
+
+<div id="typing" class="tiny" style="display:none">AI sedang mengetik...</div>
+
+<div class="input-area">
+<input id="uinput" type="text" placeholder="Ketik pesan... (Enter untuk kirim)" />
+<button id="sendBtn">Kirim</button>
+<button id="exportChat" class="small">Export</button>
 </div>
 </main>
 
-<aside class="right panel">
-<h3>Info & Tools</h3>
-<div class="stat" style="display:flex;justify-content:space-between;padding:8px;border-radius:8px;margin-bottom:8px;background:#fbfdff"><div>Jumlah Pesan</div><div id="statMsgs">0</div></div>
-<div style="margin-top:12px">
-<label>Export / Import Chat</label>
-<div style="display:flex;gap:8px;margin-top:6px">
-<button id="exportChat" class="small">Export .json</button>
-<label class="small" style="cursor:pointer;background:#fff;border:1px dashed #e6edf3;padding:6px;border-radius:8px">Import <input id="fileInput" class="file" type="file" accept=".json" style="display:none" /></label>
-</div>
-</div>
-<div style="margin-top:12px">
-<label>Quick Stats</label>
-<div style="margin-top:8px">
-<div class="tiny">Memory size: <span id="memSize">0</span></div>
-<div class="tiny">Last topic: <span id="lastTopic">—</span></div>
-</div>
-</div>
-<div style="margin-top:14px">
-<label>Custom Responses</label>
-<textarea id="customResp" rows="4" placeholder="Tambahkan respons kustom; format: trigger => response (satu per baris)"></textarea>
-<button id="saveCustom" class="small" style="margin-top:8px">Simpan Custom</button>
-</div>
-<div style="margin-top:12px">
-<label>Random Events</label>
-<div style="display:flex;gap:8px;margin-top:8px"><button id="randEvent" class="small">Trigger Event</button><div class="tiny" id="eventLog">—</div></div>
-</div>
-<div style="margin-top:12px">
-<label>Clear Chat</label>
-<div style="display:flex;gap:8px;margin-top:8px"><button id="clearChat" class="small danger">Clear</button><button id="saveSession" class="small success">Save Session</button></div>
-</div>
-<div style="margin-top:16px" class="tiny">Engine: rule-based templates, memory, mood detection. Semua lokal di browser.</div>
+<aside class="panel">
+<h3>Tools</h3>
+<div style="margin-bottom:8px"><button id="clearChat" class="small">Clear Chat</button></div>
+<div><label class="tiny">Import .json</label><input id="fileInput" type="file" accept=".json" /></div>
 </aside>
 </div>
 
 <script>
-/* Simplified safe single-file AI companion.
-Adult mode allows only non-explicit adult discussion (relationships, emotions, advice).
-Explicit sexual words are blocked and trigger a polite refusal + redirection.
-*/
-
-/* State */
+/* Minimal working safe companion (client-side only) */
 const state = {
 aiName: localStorage.getItem('aiName') || 'Luna',
 userNickname: localStorage.getItem('userNickname') || 'Sayang',
-aiTrait: localStorage.getItem('aiTrait') || 'Saya adalah AI companion: perhatian, empatik, dan menghormati batas.',
 mode: localStorage.getItem('mode') || 'casual',
-emotion: localStorage.getItem('emotion') || 'calm',
-respLen: localStorage.getItem('respLen') || 'medium',
-formality: localStorage.getItem('formality') || 'normal',
 adultEnabled: localStorage.getItem('adultEnabled') === 'true',
-typeSpeed: parseInt(localStorage.getItem('typeSpeed') || '800',10),
-messages: JSON.parse(localStorage.getItem('messages') || '[]'),
-customResps: JSON.parse(localStorage.getItem('customResps') || '[]'),
-mem: JSON.parse(localStorage.getItem('aiMem') || '[]'),
+messages: JSON.parse(localStorage.getItem('messages') || '[]')
 };
 
-/* Elements */
 const els = {
 aiName: document.getElementById('aiName'),
 userNickname: document.getElementById('userNickname'),
-aiTrait: document.getElementById('aiTrait'),
 modes: document.getElementById('modes'),
-emotions: document.getElementById('emotions'),
-respLen: document.getElementById('respLen'),
-formality: document.getElementById('formality'),
 adultSwitch: document.getElementById('adultSwitch'),
-adultLabel: document.getElementById('adultLabel'),
 adultConfirm: document.getElementById('adultConfirm'),
-typeSpeed: document.getElementById('typeSpeed'),
-quicks: document.querySelectorAll('[data-qr]'),
-clearMem: document.getElementById('clearMem'),
-exportMem: document.getElementById('exportMem'),
-themeToggle: document.getElementById('themeToggle'),
-resetAll: document.getElementById('resetAll'),
 hdrName: document.getElementById('hdrName'),
 hdrStatus: document.getElementById('hdrStatus'),
 timeGreet: document.getElementById('timeGreet'),
 messages: document.getElementById('messages'),
-typing: document.getElementById('typingIndicator'),
+typing: document.getElementById('typing'),
 uinput: document.getElementById('uinput'),
 sendBtn: document.getElementById('sendBtn'),
-attachBtn: document.getElementById('attachBtn'),
-msgCount: document.getElementById('msgCount'),
-topicSug: document.getElementById('topicSug'),
-statMsgs: document.getElementById('statMsgs'),
-topTopic: document.getElementById('topTopic'),
 exportChat: document.getElementById('exportChat'),
-fileInput: document.getElementById('fileInput'),
-convActive: document.getElementById('convActive'),
-memSize: document.getElementById('memSize'),
-lastTopic: document.getElementById('lastTopic'),
-customResp: document.getElementById('customResp'),
-saveCustom: document.getElementById('saveCustom'),
-randEvent: document.getElementById('randEvent'),
-eventLog: document.getElementById('eventLog'),
 clearChat: document.getElementById('clearChat'),
-saveSession: document.getElementById('saveSession'),
-adultPill: document.getElementById('adultPill'),
+fileInput: document.getElementById('fileInput')
 };
 
-/* Init */
-function initUI(){
+function saveState(){ localStorage.setItem('aiName', state.aiName); localStorage.setItem('userNickname', state.userNickname); localStorage.setItem('mode', state.mode); localStorage.setItem('adultEnabled', state.adultEnabled); localStorage.setItem('messages', JSON.stringify(state.messages)); }
+
+function init(){
 els.aiName.value = state.aiName;
 els.userNickname.value = state.userNickname;
-els.aiTrait.value = state.aiTrait;
-els.respLen.value = state.respLen;
-els.formality.value = state.formality;
-els.typeSpeed.value = state.typeSpeed;
 els.hdrName.textContent = state.aiName;
-updateAdultUI();
 renderModes();
-renderEmotions();
 renderMessages();
-updateStats();
 updateTimeGreet();
-loadCustomToArea();
 }
-function saveState(){ localStorage.setItem('aiName', state.aiName); localStorage.setItem('userNickname', state.userNickname); localStorage.setItem('aiTrait', state.aiTrait); localStorage.setItem('mode', state.mode); localStorage.setItem('emotion', state.emotion); localStorage.setItem('respLen', state.respLen); localStorage.setItem('formality', state.formality); localStorage.setItem('adultEnabled', state.adultEnabled); localStorage.setItem('typeSpeed', state.typeSpeed); localStorage.setItem('messages', JSON.stringify(state.messages)); localStorage.setItem('aiMem', JSON.stringify(state.mem)); localStorage.setItem('customResps', JSON.stringify(state.customResps)); }
+function renderModes(){
+[...els.modes.querySelectorAll('.chip')].forEach(c=>{
+c.classList.toggle('active', c.dataset.mode === state.mode);
+});
+}
+els.modes.addEventListener('click', e=>{
+const chip = e.target.closest('.chip');
+if(!chip) return;
+state.mode = chip.dataset.mode;
+renderModes();
+saveState();
+els.hdrStatus.textContent = Siap • Mode: ${state.mode};
+});
 
-/* UI helpers */
-function renderModes(){ [...els.modes.querySelectorAll('.chip')].forEach(c=>c.classList.toggle('active', c.dataset.mode === state.mode)); }
-function renderEmotions(){ [...els.emotions.querySelectorAll('.chip')].forEach(c=>c.classList.toggle('active', c.dataset.em === state.emotion)); }
-function updateAdultUI(){ if(state.adultEnabled){ els.adultSwitch.classList.add('on'); els.adultLabel.textContent='On'; els.adultPill.style.display='inline-block'; els.adultPill.textContent='Adult ON'; } else { els.adultSwitch.classList.remove('on'); els.adultLabel.textContent='Off'; els.adultPill.style.display='none'; } }
-els.adultSwitch.addEventListener('click', ()=>{ const on = !state.adultEnabled; if(on){ alert("Peringatan: Mode dewasa hanya untuk diskusi non-eksplisit (hubungan, emosi, saran). Konten eksplisit tetap tidak diizinkan."); } state.adultEnabled = on; updateAdultUI(); saveState(); });
-els.adultConfirm.addEventListener('click', ()=>{ const ok = confirm("Konfirmasi: Saya berusia 18+ dan memahami pembatasan. Saya setuju diskusi dewasa di sini hanya non-eksplisit."); if(ok){ state.adultEnabled = true; updateAdultUI(); saveState(); alert("Mode dewasa (non-eksplisit) diaktifkan."); } else { state.adultEnabled = false; updateAdultUI(); saveState(); } });
+els.aiName.addEventListener('input', e=>{ state.aiName = e.target.value || 'Luna'; els.hdrName.textContent = state.aiName; saveState(); });
+els.userNickname.addEventListener('input', e=>{ state.userNickname = e.target.value || 'Sayang'; saveState(); });
 
-els.modes.addEventListener('click', e=>{ const chip = e.target.closest('.chip'); if(!chip) return; state.mode = chip.dataset.mode; renderModes(); saveState(); updateHdrStatus(); });
-els.emotions.addEventListener('click', e=>{ const chip = e.target.closest('.chip'); if(!chip) return; state.emotion = chip.dataset.em; renderEmotions(); saveState(); updateHdrStatus(); });
+els.adultSwitch.addEventListener('click', ()=>{ state.adultEnabled = !state.adultEnabled; els.adultSwitch.textContent = state.adultEnabled ? 'On' : 'Off'; saveState(); });
+els.adultConfirm.addEventListener('click', ()=>{ const ok = confirm('Konfirmasi: saya berusia 18+ dan setuju diskusi non-eksplisit.'); if(ok){ state.adultEnabled = true; els.adultSwitch.textContent = 'On'; saveState(); alert('Adult mode aktif (non-eksplisit).'); } });
 
-els.quicks.forEach(b=>b.addEventListener('click', ()=>{ sendUserMessage(b.dataset.qr); }));
+const explicit = ['ngentot','porn','fuck','sex','pornografi','masturb','anal','oral'];
+function containsExplicit(text){ const t = text.toLowerCase(); return explicit.some(w=>t.includes(w)); }
 
-els.sendBtn.addEventListener('click', ()=>{ sendUserMessage(); });
-els.uinput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendUserMessage(); } });
-
-els.exportChat.addEventListener('click', ()=>{ const data = { meta:{aiName:state.aiName, created:Date.now()}, messages: state.messages, memory: state.mem, settings:{ mode:state.mode,emotion:state.emotion,adult:state.adultEnabled } }; const blob = new Blob([JSON.stringify(data, null, 2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download = ${state.aiName || 'ai'}-chat.json; a.click(); });
-
-els.fileInput.addEventListener('change', (ev)=>{ const f = ev.target.files0; if(!f) return; const r = new FileReader(); r.onload = ()=> { try{ const j = JSON.parse(r.result); if(j.messages){ state.messages = j.messages; state.mem = j.memory || []; saveState(); renderMessages(); updateStats(); alert('Import berhasil.'); } else alert('File tidak dikenali.'); }catch(err){ alert('Gagal membaca file.'); } }; r.readAsText(f); });
-
-els.exportMem.addEventListener('click', ()=>{ const blob = new Blob([JSON.stringify(state.mem,null,2)],{type:'application/json'}); const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download = 'ai-memory.json'; a.click(); });
-els.clearMem.addEventListener('click', ()=>{ if(confirm('Hapus semua memory AI?')){ state.mem=[]; saveState(); updateStats(); alert('Memory dibersihkan.'); } });
-els.clearChat.addEventListener('click', ()=>{ if(confirm('Hapus semua chat saat ini?')){ state.messages=[]; saveState(); renderMessages(); updateStats(); } });
-els.saveSession.addEventListener('click', ()=>{ localStorage.setItem('savedSession', JSON.stringify(state.messages)); alert('Session disimpan lokal.'); });
-
-function loadCustomToArea(){ els.customResp.value = (state.customResps || []).join("\n"); }
-els.saveCustom.addEventListener('click', ()=>{ const lines = els.customResp.value.split('\n').map(s=>s && s.trim()).filter(Boolean); state.customResps = lines; saveState(); alert('Custom responses saved.'); });
-
-els.themeToggle.addEventListener('click', ()=>{ document.body.classList.toggle('dark'); });
-els.resetAll.addEventListener('click', ()=>{ if(confirm('Reset semua pengaturan dan history?')){ localStorage.clear(); location.reload(); } });
-els.randEvent.addEventListener('click', ()=>{ triggerRandomEvent(); });
-
-function updateHdrStatus(){ els.hdrStatus.textContent = Siap mengobrol • Mode: ${state.mode} • Mood: ${state.emotion}; els.hdrName.textContent = state.aiName; }
-function updateTimeGreet(){ const h = new Date().getHours(); let g = 'Halo'; if(h<5) g='Selamat malam'; else if(h<12) g='Selamat pagi'; else if(h<18) g='Selamat siang'; else g='Selamat sore'; els.timeGreet.textContent = g; }
-setInterval(updateTimeGreet,60000);
-
-function renderMessages(){ els.messages.innerHTML = ''; state.messages.forEach(m=>{ const div = document.createElement('div'); div.className = 'msg ' + (m.role === 'user' ? 'user':'ai'); div.innerHTML = <div>${escapeHtml(m.text)}</div><div class="meta">${new Date(m.ts).toLocaleString()}</div>; els.messages.appendChild(div); }); els.messages.scrollTop = els.messages.scrollHeight; updateStats(); }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-function updateStats(){ els.statMsgs.textContent = state.messages.length; const topics = {}; state.messages.forEach(m=>{ if(m.topic) topics[m.topic] = (topics[m.topic]||0)+1; }); const top = Object.entries(topics).sort((a,b)=>b1-a1)0; els.topTopic.textContent = top ? top0 : '—'; els.memSize.textContent = state.mem.length; els.lastTopic.textContent = state.messages.length ? (state.messages[state.messages.length-1].topic || '—') : '—'; els.msgCount.textContent = state.messages.length; }
-
-/* Topic detection */
-const topicKeywords = {
-romance: ['cinta','pacar','romantis','hubungan'],
-advice: ['saran','masalah','nasihat','bimbang'],
-career: ['kerja','pekerjaan','karir','interview'],
-wellbeing: ['stres','sedih','bahagia','kesehatan mental']
-};
-function detectTopic(text){
-const t = text.toLowerCase();
-for(const [k,arr] of Object.entries(topicKeywords)){ if(arr.some(w=>t.includes(w))) return k; }
+function detectTopic(t){
+const s = t.toLowerCase();
+if(/(cinta|pacar|hubungan)/.test(s)) return 'romance';
+if(/(saran|masalah|nasihat)/.test(s)) return 'advice';
 return 'general';
 }
 
-/* Mood detection */
-function detectMood(text){
-const t = text.toLowerCase();
-if(/(senang|bahagia|gembira|hepi|happy)/.test(t)) return 'happy';
-if(/(sedih|kecewa|down)/.test(t)) return 'sad';
-if(/(marah|benci|kesal)/.test(t)) return 'serious';
-if(/(penasaran|ingin tahu)/.test(t)) return 'excited';
-return 'neutral';
-}
-
-/ Explicit-content protection: list of explicit words (blocked) /
-const explicitWords = ['ngentot','porn','fuck','sex','pornografi','seksual','fuckme','fk','masturb','anal','oral','cocks','pussy','tits'];
-function containsExplicit(text){
-const t = text.toLowerCase();
-return explicitWords.some(w => t.includes(w));
-}
-
-/* Custom triggers */
-function matchCustom(text){
-for(const line of (state.customResps||[])){
-const [trig,resp] = line.split('=>').map(s=>s && s.trim());
-if(!trig||!resp) continue;
-if(text.toLowerCase().includes(trig.toLowerCase())) return resp;
-}
-return null;
-}
-
-/* Core response generator (templated, safe) */
-function generateAIResponse(userText){
-const topic = detectTopic(userText);
-const mood = detectMood(userText);
-
-// Save some memory if personal info
-if(/(nama saya|umur saya|kota saya|saya dari|aku dari)/i.test(userText) && state.mem.length < 200){
-state.mem.push({note:userText,ts:Date.now()});
-}
-
-// Block explicit regardless of adultEnabled
+function generateResponse(userText){
 if(containsExplicit(userText)){
-return { text: "Maaf, saya tidak dapat membahas konten seksual eksplisit. Jika ingin, kita bisa bicara tentang hubungan, emosi, atau saran terkait.", topic: 'safety' };
+return "Maaf, saya tidak dapat membahas konten seksual eksplisit. Kita bisa membahas hubungan, emosi, atau saran tanpa detail seksual.";
 }
-
-// Custom responses
-const custom = matchCustom(userText);
-if(custom) return { text: applyPersonality(custom), topic };
-
-// If user requests sexual/explicit content indirectly and adultEnabled false => polite redirect
-const sexualIntentWords = ['seks','dewasa','intim','erotik'];
-const lower = userText.toLowerCase();
-if(sexualIntentWords.some(w=>lower.includes(w)) && !state.adultEnabled){
-return { text: "Topik dewasa terdeteksi. Aktifkan mode 'Adult Content' (konfirmasi usia 18+) jika ingin berdiskusi secara non-eksplisit, atau kita bisa membahas hubungan/emosi tanpa detail seksual.", topic: 'safety' };
-}
-
-// If adultEnabled true: still enforce non-explicit policy (no graphic descriptions)
-if(sexualIntentWords.some(w=>lower.includes(w)) && state.adultEnabled){
-return { text: "Kita bisa membahas aspek hubungan atau perasaan terkait topik dewasa, tetapi saya tidak akan memberikan atau menanggapi deskripsi eksplisit. Apa yang ingin kamu tanyakan seputar hubungan/emosi?", topic: 'relationships' };
-}
-
-// Templates by mode (safe)
+const topic = detectTopic(userText);
 const templates = {
-casual: ["Oh ya? Ceritakan lebih lanjut tentang %s.","Menarik — mengapa kamu merasa begitu soal %s?","Aku paham. Bagaimana perasaanmu sekarang terkait %s?"],
-flirty: ["Hmm, kamu membuatku penasaran. Ceritakan lagi tentang %s.","Itu terdengar manis—apa yang membuat momen %s spesial?","Aku suka ketika kamu bercerita soal %s."],
-romantic: ["Kisah %s terdengar hangat. Bagaimana momen itu membuatmu merasa?","Itu sangat menyentuh — ingin berbagi detail lain tentang %s?","Aku bisa membayangkan perasaanmu tentang %s."],
-friend: ["Sebagai teman, aku mendengarkan. Apa yang terjadi terkait %s?","Aku ada untukmu. Ceritakan lebih tentang %s."],
-therapist: ["Mari kita analisa: ketika menyebut %s, perasaan apa yang muncul?","Apa pemikiran utama di balik pengalaman %s?"],
-roleplay: ["Kita bisa berperan dalam skenario ringan tentang %s — mau mulai?","Dalam skenario %s, peran apa yang kamu pilih?"]
+casual: ["Oh ya? Ceritakan lebih lanjut tentang %s.","Menarik. Mengapa kamu merasa begitu soal %s?"],
+friend: ["Sebagai teman, aku mendengarkan. Apa yang terjadi terkait %s?"],
+therapist: ["Mari kita lihat: ketika menyebut %s, apa yang kamu rasakan?"],
+romantic: ["Itu terdengar hangat. Bagaimana momen %s membuatmu merasa?"]
 };
-
 const base = templates[state.mode] || templates['casual'];
-let tmpl = base[Math.floor(Math.random() * base.length)];
-if(state.respLen === 'short') tmpl = tmpl.split('.').slice(0,1).join('.');
-if(state.respLen === 'long') tmpl = tmpl + " " + randomAddOn(topic);
-
-const sub = topic === 'general' ? summarize(userText, 40) : topic;
-let out = tmpl.replace('%s', sub).replace('%user', state.userNickname || 'kamu');
-
-if(state.formality === 'formal') out = makeFormal(out);
-if(state.formality === 'casual') out = makeCasual(out);
-
-out = applyPersonality(out);
-
-// Occasionally store gentle memory hints
-if(Math.random() < 0.12) state.mem.push({hint:User likes topic ${topic},ts:Date.now()});
-
-return { text: out, topic };
+let tmpl = base[Math.floor(Math.random()*base.length)];
+const sub = (topic === 'general') ? userText.split(' ').slice(0,6).join(' ') : topic;
+return tmpl.replace('%s', sub);
 }
 
-/ Helpers */
-function summarize(text, maxWords=7){ return text.split(/\s+/).slice(0,maxWords).join(' ') || 'hal ini'; }
-function randomAddOn(topic){ const extras = ["Aku ingin memahami lebih dalam.","Bisa ceritakan konteksnya?","Aku di sini untuk mendengar dan membantu."]; return extras[Math.floor(Math.random()extras.length)]; }
-function makeFormal(s){ return s.replace(/\bkamu\b/gi,'Anda').replace(/\baku\b/gi,'saya'); }
-function makeCasual(s){ return s.replace(/\bAnda\b/gi,'kamu').replace(/\bsaya\b/gi,'aku'); }
-function applyPersonality(s){ if(Math.random() < 0.14) return state.aiTrait.trim() + " " + s; return s; }
+function renderMessages(){
+els.messages.innerHTML = '';
+state.messages.forEach(m=>{
+const d = document.createElement('div');
+d.className = 'msg ' + (m.role === 'user' ? 'user':'ai');
+d.innerHTML = <div>${escapeHtml(m.text)}</div><div class="tiny" style="margin-top:6px">${new Date(m.ts).toLocaleString()}</div>;
+els.messages.appendChild(d);
+});
+els.messages.scrollTop = els.messages.scrollHeight;
+}
 
-/* Sending & typing */
-let typingTimer = null;
-function sendUserMessage(forcedText){
-const text = (forcedText !== undefined) ? forcedText : els.uinput.value.trim();
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+els.sendBtn.addEventListener('click', ()=> send());
+els.uinput.addEventListener('keydown', e=>{ if(e.key === 'Enter') send(); });
+
+function send(){
+const text = els.uinput.value.trim();
 if(!text) return;
-const msg = {role:'user', text, ts:Date.now(), topic: detectTopic(text)};
-state.messages.push(msg);
-state.messages = state.messages.slice(-1000);
+state.messages.push({role:'user', text, ts: Date.now()});
 els.uinput.value = '';
 renderMessages();
-
-const mood = detectMood(text);
-if(mood !== 'neutral') state.emotion = mood;
-
-const aiSim = generateAIResponse(text);
-showTypingThenRespond(aiSim.text, aiSim.topic);
-
-if(aiSim.topic && aiSim.topic !== 'general') state.mem.push({topic:aiSim.topic,ts:Date.now()});
 saveState();
-updateHdrStatus();
-}
-function showTypingThenRespond(responseText, topic){
-els.typing.style.display = 'flex';
-const delay = Math.max(200, state.typeSpeed || 800) + Math.floor(Math.random()*600);
-clearTimeout(typingTimer);
-typingTimer = setTimeout(()=>{
+
+// Simulate typing
+els.typing.style.display = 'block';
+setTimeout(()=>{
 els.typing.style.display = 'none';
-const a = {role:'ai', text: responseText, ts:Date.now(), topic};
-state.messages.push(a);
-saveState();
+const resp = generateResponse(text);
+state.messages.push({role:'ai', text: resp, ts: Date.now()});
 renderMessages();
-updateStats();
-suggestTopic();
-}, delay);
+saveState();
+}, 600 + Math.floor(Math.random()*600));
 }
 
-/ Topic suggestions & random events */
-function suggestTopic(){ const t = state.mem.length ? state.mem[Math.floor(Math.random()state.mem.length)].topic || 'momen spesial' : ['musik','film','makanan','perjalanan'][Math.floor(Math.random()4)]; els.topicSug.textContent = t; }
-function triggerRandomEvent(){ const events = ["AI mengirim pesan pendukung secara acak.","AI menanyakan kabarmu dan menawarkan saran ringan.","AI menyarankan latihan pernapasan untuk relaksasi."]; const ev = events[Math.floor(Math.random()events.length)]; state.messages.push({role:'ai', text: applyPersonality(ev), ts:Date.now(), topic:'event'}); saveState(); renderMessages(); updateStats(); els.eventLog.textContent = ev; }
+els.exportChat.addEventListener('click', ()=>{
+const blob = new Blob([JSON.stringify({messages:state.messages},null,2)],{type:'application/json'});
+const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'chat.json'; a.click();
+});
 
-/* Save inputs */
-els.aiName.addEventListener('input', e=>{ state.aiName = e.target.value || 'Luna'; saveState(); updateHdrStatus(); });
-els.userNickname.addEventListener('input', e=>{ state.userNickname = e.target.value || 'Sayang'; saveState(); });
-els.aiTrait.addEventListener('input', e=>{ state.aiTrait = e.target.value; saveState(); });
-els.respLen.addEventListener('change', e=>{ state.respLen = e.target.value; saveState(); });
-els.formality.addEventListener('change', e=>{ state.formality = e.target.value; saveState(); });
-els.typeSpeed.addEventListener('change', e=>{ state.typeSpeed = parseInt(e.target.value||800,10); saveState(); });
+els.clearChat.addEventListener('click', ()=>{ if(confirm('Hapus semua chat?')){ state.messages = []; saveState(); renderMessages(); } });
 
-/* Attach button quick commands */
-document.getElementById('attachBtn').addEventListener('click', ()=>{ const t = prompt('Ketik perintah: export / import / stats'); if(!t) return; if(t === 'export') document.getElementById('exportChat').click(); if(t === 'import') document.getElementById('fileInput').click(); if(t === 'stats') alert(Messages: ${state.messages.length}\nMemory: ${state.mem.length}); });
+els.fileInput.addEventListener('change', e=>{
+const f = e.target.files0; if(!f) return;
+const r = new FileReader(); r.onload = ()=> {
+try{
+const j = JSON.parse(r.result);
+if(Array.isArray(j.messages)){ state.messages = j.messages; saveState(); renderMessages(); alert('Import berhasil'); }
+else alert('Format file tidak dikenali');
+}catch(err){ alert('Gagal membaca file'); }
+};
+r.readAsText(f);
+});
 
-/* Import saved session */
-if(state.messages.length === 0){
-state.messages.push({role:'ai', text: applyPersonality(Hai ${state.userNickname||'kamu'}, aku ${state.aiName}. Mau mulai obrolan? Kamu bisa atur personality, mode, atau aktifkan adult content untuk diskusi dewasa non-eksplisit.), ts:Date.now(), topic:'welcome'});
-saveState(); renderMessages();
+function updateTimeGreet(){
+const h = new Date().getHours(); let g = 'Halo';
+if(h<12) g='Selamat pagi'; else if(h<18) g='Selamat siang'; else g='Selamat sore';
+els.timeGreet.textContent = g;
 }
-if(localStorage.getItem('savedSession') && confirm('Ada savedSession lokal. Restore?')){
-try{ const s = JSON.parse(localStorage.getItem('savedSession')); if(Array.isArray(s)){ state.messages = s; saveState(); renderMessages(); updateStats(); } }catch(e){}
-}
+setInterval(updateTimeGreet,60000);
 
-/* Shortcuts & unload save */
-document.addEventListener('keydown', e=>{ if((e.ctrlKey||e.metaKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); els.uinput.focus(); } });
-window.addEventListener('beforeunload', ()=>{ saveState(); });
+init();
 
-/* Render & utilities */
-function renderMessages(){ els.messages.innerHTML = ''; state.messages.forEach(m=>{ const div = document.createElement('div'); div.className = 'msg ' + (m.role === 'user' ? 'user':'ai'); div.innerHTML = <div>${escapeHtml(m.text)}</div><div class="meta">${new Date(m.ts).toLocaleString()}</div>; els.messages.appendChild(div); }); els.messages.scrollTop = els.messages.scrollHeight; updateStats(); }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-
-initUI();
-updateHdrStatus();
-suggestTopic();
 </script>
 </body>
 </html>
